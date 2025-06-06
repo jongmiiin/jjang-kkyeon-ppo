@@ -45,10 +45,14 @@ def compare_rps(a, b):
         return 'right'
 
 def update_attacker(attack, defense):
-    winner = compare_rps(attack, defense)
-    if winner == 'tie':
-        return 'end'
-    return winner
+    # attack: 공격권자 패, defense: 수비자 패
+    if attack == defense:
+        return 'end'  # 게임 종료(공격권자 승)
+    win_map = {'rock': 'scissors', 'scissors': 'paper', 'paper': 'rock'}
+    if win_map[attack] == defense:
+        return 'keep'      # 공격권 유지
+    else:
+        return 'switch'    # 공격권 넘김
 
 ### ---------- 2. 상태 및 변수 초기화 ---------- ###
 STATE_SELECT = 0
@@ -188,10 +192,10 @@ while True:
                         round_winner = attacker
                         state = STATE_RESULT
                         last_time = time.time()
-                    elif result == attacker:
+                    elif result == 'keep':
                         last_result = f"{attacker.title()} Attack (Keep)!"
                     else:
-                        attacker = 'left' if attacker == 'right' else 'right'
+                        attacker = 'right' if attacker == 'left' else 'left'
                         last_result = f"Attack Turn: {attacker.title()}"
         else:
             if mode == 'MUKJJIPPA' and attacker is not None:
