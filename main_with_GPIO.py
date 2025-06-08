@@ -48,6 +48,10 @@ quit_button = 17
 rps_led = 6
 mjp_led = 5
 
+# Servo Pin
+left_servo_pin = 12
+right_servo_pin = 18
+
 # -------- GPIO set up --------
 GPIO.setwarnings(False); GPIO.setmode(GPIO.BCM)
 
@@ -61,6 +65,15 @@ GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(rps_led, GPIO.OUT)
 GPIO.setup(mjp_led, GPIO.OUT)
 
+# servo set up
+GPIO.setup(left_servo_pin, GPIO.OUT)
+GPIO.setup(right_servo_pin, GPIO.OUT)
+
+left_servo = GPIO.PWM(left_servo_pin, 50)
+right_servo = GPIO.PWM(right_servo_pin, 50)
+
+left_servo.start(0)
+right_servo.start(0)
 
 # ----- 묵찌빠 판정 함수 -----
 def compare_rps(a, b):
@@ -95,6 +108,7 @@ round_winner = None
 last_result = ''
 ready_count = 3
 last_time = time.time()
+hit = True
 
 ### ---------- 3. 메인 루프 ---------- ###
 while True:
@@ -113,6 +127,8 @@ while True:
         
         GPIO.output(rps_led, 0)
         GPIO.output(mjp_led, 0)
+        
+        
         
         if GPIO.input(rps_button)==GPIO.HIGH:
             mode = 'RPS'
@@ -242,6 +258,7 @@ while True:
     # -- 4) 결과/벌칙, 재시작 UI --
     elif state == STATE_RESULT:
         cv2.putText(display, "GAME OVER", (160, 130), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,255), 4)
+        loser = None
         if mode == 'RPS':
             if round_winner == 'tie':
                 cv2.putText(display, "Draw!", (220, 210), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,255,0), 4)
@@ -250,14 +267,40 @@ while True:
                 loser = "Right" if round_winner == 'left' else "Left"
                 cv2.putText(display, f"{round_winner.title()} Win!", (180, 210), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 4)
                 cv2.putText(display, f"Penalty: {loser}!", (200, 300), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,255), 3)
+                
         elif mode == 'MJP':
             winner = round_winner
             loser = "Right" if winner == 'left' else "Left"
             cv2.putText(display, f"{winner.title()} Win!", (200, 210), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 4)
             cv2.putText(display, f"Penalty: {loser}!", (220, 300), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,255), 3)
+        
         cv2.putText(display, "R: Restart, Q: Quit", (120, 400), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255,255,255), 2)
         
+        if loser == "Right":
+            while hit:
+                right_servo.ChangeDutyCycle(7.5) # 90
+                time.sleep(0.5)
+                right_servo.ChangeDutyCycle(12.5) # 180
+                time.sleep(0.5)
+                right_servo.ChangeDutyCycle(7.5) # 90
+                time.sleep(0.5)
+                right_servo.ChangeDutyCycle(0)
+                time.sleep(0.5)
+                hit = False
+        elif loser == "Left":
+            while hit:
+                left_servo.ChangeDutyCycle(7.5) # 90
+                time.sleep(0.5)
+                left_servo.ChangeDutyCycle(2.5) # 0
+                time.sleep(0.5)
+                left_servo.ChangeDutyCycle(7.5) # 90
+                time.sleep(0.5)
+                left_servo.ChangeDutyCycle(0)
+                time.sleep(0.5)
+                hit = False
+        
         if GPIO.input(replay_button)==GPIO.HIGH:
+            hit = True
             state = STATE_READY
             ready_count = 3
             last_time = time.time()
@@ -275,6 +318,8 @@ while True:
     cv2.imshow('Jjang-Kkyeon-Ppo', display)
 
 # 종료
+left_servo.stop()
+right_servo.stop()
 GPIO.cleanup()
 hands.close()
 picam2.stop()
