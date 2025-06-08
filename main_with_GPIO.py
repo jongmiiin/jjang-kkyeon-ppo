@@ -52,6 +52,10 @@ mjp_led = 5
 left_servo_pin = 12
 right_servo_pin = 18
 
+# Buzzer Pin
+buzzer_pin = 13
+rps_sound = [523, 440, 349, 440, 523]
+
 # -------- GPIO set up --------
 GPIO.setwarnings(False); GPIO.setmode(GPIO.BCM)
 
@@ -74,6 +78,10 @@ right_servo = GPIO.PWM(right_servo_pin, 50)
 
 left_servo.start(0)
 right_servo.start(0)
+
+# buzzer set up
+GPIO.setup(buzzer_pin, GPIO.OUT)
+buzzer = GPIO.PWM(buzzer_pin, 100)
 
 # ----- 묵찌빠 판정 함수 -----
 def compare_rps(a, b):
@@ -148,10 +156,29 @@ while True:
     # -- 2) 게임 준비 카운트다운 --
     elif state == STATE_READY:
         cv2.putText(display, f"Get Ready! {ready_count}", (160, 200), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 4)
-        if time.time() - last_time > 1:
+        if ready_count == 3:
+            buzzer.start(10)
+            buzzer.ChangeFrequency(rps_sound[0])
+            time.sleep(0.5)
+            buzzer.ChangeFrequency(rps_sound[1])
+            time.sleep(0.5)
             ready_count -= 1
-            last_time = time.time()
-        if ready_count == 0:
+            buzzer.stop()
+            
+        elif ready_count == 2:
+            buzzer.start(10)
+            buzzer.ChangeFrequency(rps_sound[2])
+            time.sleep(0.5)
+            buzzer.ChangeFrequency(rps_sound[3])
+            time.sleep(0.5)
+            ready_count -= 1
+            buzzer.stop()
+        
+        else:
+            buzzer.start(10)
+            buzzer.ChangeFrequency(rps_sound[4])
+            time.sleep(1)
+            buzzer.stop()
             state = STATE_PLAY
             last_time = time.time()
             attacker = None
