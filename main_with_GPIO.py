@@ -36,20 +36,30 @@ knn.train(angle_data, cv2.ml.ROW_SAMPLE, label_data)
 rps_gesture = {0: 'rock', 5: 'paper', 9: 'scissors'}
 
 
-# ----- GPIO -----
+# -------- GPIO --------
+
 # switch button Pin
 rps_button = 23
 mjp_button = 22
 replay_button = 27
 quit_button = 17
 
-# ----- GPIO set up -----
+# LED Pin
+rps_led = 6
+mjp_led = 5
+
+# -------- GPIO set up --------
 GPIO.setwarnings(False); GPIO.setmode(GPIO.BCM)
+
 # switch set up
 GPIO.setup(rps_button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(mjp_button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(replay_button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(quit_button, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+
+# led set up
+GPIO.setup(rps_led, GPIO.OUT)
+GPIO.setup(mjp_led, GPIO.OUT)
 
 
 # ----- 묵찌빠 판정 함수 -----
@@ -80,7 +90,6 @@ STATE_RESULT = 3
 
 state = STATE_SELECT
 mode = None
-msg = ''
 attacker = None
 round_winner = None
 last_result = ''
@@ -98,19 +107,25 @@ while True:
     # -- 1) 모드 선택 UI --
     if state == STATE_SELECT:
         cv2.putText(display, "Select Game Mode:", (70, 90), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2)
-        cv2.putText(display, "1: Rock-Paper-Scissors", (100, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
-        cv2.putText(display, "2: Mukjjippa", (100, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
+        cv2.putText(display, "RPA: Rock-Paper-Scissors", (100, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
+        cv2.putText(display, "MJP: Mukjjippa", (100, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
         cv2.putText(display, "Q: Quit", (100, 260), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,255), 2)
+        
+        GPIO.output(rps_led, 0)
+        GPIO.output(mjp_led, 0)
+        
         if GPIO.input(rps_button)==GPIO.HIGH:
             mode = 'RPS'
             state = STATE_READY
             ready_count = 3
             last_time = time.time()
+            GPIO.output(rps_led, 1)
         elif GPIO.input(mjp_button)==GPIO.HIGH:
-            mode = 'MUKJJIPPA'
+            mode = 'MJP'
             state = STATE_READY
             ready_count = 3
             last_time = time.time()
+            GPIO.output(mjp_led, 1)
         elif GPIO.input(quit_button)==GPIO.HIGH:
             break
 
@@ -187,7 +202,7 @@ while True:
                 state = STATE_RESULT
                 last_time = time.time()
 
-            elif mode == 'MUKJJIPPA':
+            elif mode == 'MJP':
                 if attacker is None:
                     winner = compare_rps(left, right)
                     if winner == 'tie':
@@ -216,7 +231,7 @@ while True:
                         attacker = 'right' if attacker == 'left' else 'left'
                         last_result = f"Attack Turn: {attacker.title()}"
         else:
-            if mode == 'MUKJJIPPA' and attacker is not None:
+            if mode == 'MJP' and attacker is not None:
                 last_result = f"Attack Turn: {attacker.title()}"
             else:
                 last_result = "Show both hands!"
@@ -235,7 +250,7 @@ while True:
                 loser = "Right" if round_winner == 'left' else "Left"
                 cv2.putText(display, f"{round_winner.title()} Win!", (180, 210), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 4)
                 cv2.putText(display, f"Penalty: {loser}!", (200, 300), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0,0,255), 3)
-        elif mode == 'MUKJJIPPA':
+        elif mode == 'MJP':
             winner = round_winner
             loser = "Right" if winner == 'left' else "Left"
             cv2.putText(display, f"{winner.title()} Win!", (200, 210), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 4)
@@ -255,7 +270,6 @@ while True:
             round_winner = None
             last_result = ''
             ready_count = 3
-        
 
     # -- 5) 영상 출력 및 종료 처리 --
     cv2.imshow('Jjang-Kkyeon-Ppo', display)
