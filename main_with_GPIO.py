@@ -4,6 +4,7 @@ import numpy as np
 from picamera2 import Picamera2
 import mediapipe as mp
 import RPi.GPIO as GPIO
+import threading
 
 ### ---------- 1. 시스템 및 모델 준비 ---------- ###
 picam2 = Picamera2()
@@ -80,8 +81,15 @@ left_servo.start(0)
 right_servo.start(0)
 
 # buzzer set up
-GPIO.setup(buzzer_pin, GPIO.OUT)
-buzzer = GPIO.PWM(buzzer_pin, 100)
+
+def play_buzzer(melody):
+    GPIO.setup(buzzer_pin, GPIO.OUT)
+    buzzer = GPIO.PWM(buzzer_pin, 100)
+    buzzer.start(10)
+    for fr in melody:
+        buzzer.ChangeFrequency(fr)
+        time.sleep(0.5)
+
 
 # ----- 묵찌빠 판정 함수 -----
 def compare_rps(a, b):
@@ -137,7 +145,6 @@ while True:
         GPIO.output(mjp_led, 0)
         
         
-        
         if GPIO.input(rps_button)==GPIO.HIGH:
             mode = 'RPS'
             state = STATE_READY
@@ -156,29 +163,12 @@ while True:
     # -- 2) 게임 준비 카운트다운 --
     elif state == STATE_READY:
         cv2.putText(display, f"Get Ready! {ready_count}", (160, 200), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,255,0), 4)
-        if ready_count == 3:
-            buzzer.start(10)
-            buzzer.ChangeFrequency(rps_sound[0])
-            time.sleep(0.5)
-            buzzer.ChangeFrequency(rps_sound[1])
-            time.sleep(0.5)
+        if time.time() - last_time > 1:
+            if ready_count == 3:
+                threading.Thread(target=play_buzzer, args=(rps_sound,), daemon=True).start()
             ready_count -= 1
-            buzzer.stop()
-            
-        elif ready_count == 2:
-            buzzer.start(10)
-            buzzer.ChangeFrequency(rps_sound[2])
-            time.sleep(0.5)
-            buzzer.ChangeFrequency(rps_sound[3])
-            time.sleep(0.5)
-            ready_count -= 1
-            buzzer.stop()
-        
-        else:
-            buzzer.start(10)
-            buzzer.ChangeFrequency(rps_sound[4])
-            time.sleep(1)
-            buzzer.stop()
+            last_time = time.time()
+        if ready_count == 0:
             state = STATE_PLAY
             last_time = time.time()
             attacker = None
@@ -314,6 +304,7 @@ while True:
                 right_servo.ChangeDutyCycle(0)
                 time.sleep(0.5)
                 hit = False
+                
         elif loser == "Left":
             while hit:
                 left_servo.ChangeDutyCycle(7.5) # 90
@@ -333,6 +324,7 @@ while True:
             last_time = time.time()
             
         elif GPIO.input(quit_button)==GPIO.HIGH:
+            hit = True
             time.sleep(0.2)
             state = STATE_SELECT
             mode = None
@@ -340,6 +332,7 @@ while True:
             round_winner = None
             last_result = ''
             ready_count = 3
+        
 
     # -- 5) 영상 출력 및 종료 처리 --
     cv2.imshow('Jjang-Kkyeon-Ppo', display)
