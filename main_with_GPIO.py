@@ -136,10 +136,20 @@ while True:
 
     # -- 1) 모드 선택 UI --
     if state == STATE_SELECT:
-        cv2.putText(display, "Select Game Mode:", (70, 90), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2)
-        cv2.putText(display, "RPA: Rock-Paper-Scissors", (100, 160), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
-        cv2.putText(display, "MJP: Mukjjippa", (100, 210), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
-        cv2.putText(display, "Q: Quit", (100, 260), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,255), 2)
+        cv2.putText(display, "JJANG KKYEON PPO", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (0,0,0), 6, cv2.LINE_AA)
+        cv2.putText(display, "JJANG KKYEON PPO", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 2, (255,0,0), 3, cv2.LINE_AA)
+        
+        cv2.putText(display, "Select Game Mode :", (70, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,0), 5, cv2.LINE_AA)
+        cv2.putText(display, "Select Game Mode :", (70, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2, cv2.LINE_AA)
+        
+        cv2.putText(display, "RPA : Rock-Paper-Scissors", (100, 270), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,0), 5, cv2.LINE_AA)
+        cv2.putText(display, "RPA : Rock-Paper-Scissors", (100, 270), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2, cv2.LINE_AA)
+        
+        cv2.putText(display, "MJP : Muk-jji-ppa", (100, 320), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,0), 5, cv2.LINE_AA)
+        cv2.putText(display, "MJP : Muk-jji-ppa", (100, 320), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2, cv2.LINE_AA)
+        
+        cv2.putText(display, "Q : Quit", (100, 370), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,0), 5, cv2.LINE_AA)
+        cv2.putText(display, "Q : Quit", (100, 370), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0,0,255), 2, cv2.LINE_AA)
         
         GPIO.output(rps_led, 0)
         GPIO.output(mjp_led, 0)
