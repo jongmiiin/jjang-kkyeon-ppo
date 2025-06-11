@@ -129,6 +129,7 @@ hit = True
 ### ---------- 3. 메인 루프 ---------- ###
 while True:
     frame_rgb = picam2.capture_array()
+    frame_rgb = cv2.flip(frame_rgb, 1)
     frame_bgr = cv2.cvtColor(frame_rgb, cv2.COLOR_RGB2BGR)
     key = cv2.waitKey(1) & 0xFF
 

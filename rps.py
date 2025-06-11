@@ -44,6 +44,7 @@ rps_gesture = {0: 'rock', 5: 'paper', 9: 'scissors'}
 while True:
     # 4-1) Picamera2에서 프레임 획득 (RGB)
     frame_rgb = picam2.capture_array()  # shape=(240,320,3), RGB 순서
+    frame_rgb = cv2.flip(frame_rgb, 1)
 
     # 4-2) MediaPipe Hands로 손 검출
     results = hands.process(frame_rgb)
